@@ -6,3 +6,7 @@ an openFrameworks wrapper of [ImGuizmo](https://github.com/CedricGuillemet/ImGui
 
 1. clone this repository
 1. init and update submodule `git submodule update --init`
+
+## dependencies
+
+### [ofxImGui](https://github.com/jvcleave/ofxImGui)
