@@ -1,0 +1,3 @@
+[submodule "libs/ImGuizmo"]
+	path = libs/ImGuizmo
+	url = git@github.com:CedricGuillemet/ImGuizmo.git
