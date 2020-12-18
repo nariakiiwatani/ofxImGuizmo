@@ -1,6 +1,8 @@
 #pragma once
 
+#include "ofxImGui.h"
 #include "ImGuizmo.h"
+#include "ofCamera.h"
 #include "ofNode.h"
 #include <glm/gtx/matrix_decompose.hpp>
 
