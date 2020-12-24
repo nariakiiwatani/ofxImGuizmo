@@ -6,6 +6,33 @@
 #include "ofNode.h"
 #include <glm/gtx/matrix_decompose.hpp>
 
+namespace {
+void applyLocalTransformMatrix(ofNode &node, const glm::mat4 &mat) {
+	glm::vec3 scale;
+	glm::quat rotation;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	glm::decompose(mat, scale, rotation, translation, skew, perspective);
+	
+	node.setPosition(translation);
+	node.setOrientation(rotation);
+	node.setScale(scale);
+}
+void applyWorldTransformMatrix(ofNode &node, const glm::mat4 &mat) {
+	glm::vec3 scale;
+	glm::quat rotation;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	glm::decompose(mat, scale, rotation, translation, skew, perspective);
+	
+	node.setGlobalPosition(translation);
+	node.setGlobalOrientation(rotation);
+	node.setScale(scale/(node.getParent()?node.getParent()->getGlobalScale():glm::vec3{1,1,1}));
+}
+}
+
 namespace ImGuizmo
 {
 static bool Manipulate(const ofCamera &camera, glm::mat4 &matrix, OPERATION operation, MODE mode, const ofRectangle *viewvolume=nullptr, glm::mat4 *delta_matrix=nullptr, const float *snap = nullptr, const float *localBounds = nullptr, const float *boundsSnap = nullptr) {
@@ -19,18 +46,24 @@ static bool Manipulate(const ofCamera &camera, glm::mat4 &matrix, OPERATION oper
 static bool Manipulate(const ofCamera &camera, ofNode &node, OPERATION operation, MODE mode, const ofRectangle *viewvolume=nullptr, glm::mat4 *delta_matrix=nullptr, const float *snap = nullptr, const float *localBounds = nullptr, const float *boundsSnap = nullptr) {
 	auto matrix = node.getGlobalTransformMatrix();
 	if(Manipulate(camera, matrix, operation, mode, viewvolume, delta_matrix, snap, localBounds, boundsSnap)) {
-		glm::vec3 scale;
-		glm::quat rotation;
-		glm::vec3 translation;
-		glm::vec3 skew;
-		glm::vec4 perspective;
-		glm::decompose(matrix, scale, rotation, translation, skew, perspective);
-		
-		node.setGlobalPosition(translation);
-		node.setGlobalOrientation(rotation);
-		node.setScale(scale/(node.getParent()?node.getParent()->getGlobalScale():glm::vec3{1,1,1}));
+		applyWorldTransformMatrix(node, matrix);
 		return true;
 	}
 	return false;
 }
+static bool ViewManipulate(ofNode &node, float eye_length, const ofRectangle &pos_size, const ofColor &bg_color) {
+//	IMGUI_API void ViewManipulate(float* view, float length, ImVec2 position, ImVec2 size, ImU32 backgroundColor);
+	auto view = glm::inverse(node.getGlobalTransformMatrix());
+	auto view_cache = view;
+	auto colorToHex = [](const ofColor &color) -> ImU32 {
+		return color.a<<24|color.getHex();
+	};
+	ViewManipulate(&view[0][0], eye_length, ImVec2(pos_size.x, pos_size.y), ImVec2(pos_size.width, pos_size.height), colorToHex(bg_color));
+	if(view != view_cache) {
+		applyLocalTransformMatrix(node, glm::inverse(view));
+		return true;
+	}
+	return false;
+}
+
 }
