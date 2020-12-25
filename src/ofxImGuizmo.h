@@ -7,7 +7,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 namespace {
-void applyLocalTransformMatrix(ofNode &node, const glm::mat4 &mat) {
+static void applyLocalTransformMatrix(ofNode &node, const glm::mat4 &mat) {
 	glm::vec3 scale;
 	glm::quat rotation;
 	glm::vec3 translation;
@@ -19,7 +19,7 @@ void applyLocalTransformMatrix(ofNode &node, const glm::mat4 &mat) {
 	node.setOrientation(rotation);
 	node.setScale(scale);
 }
-void applyWorldTransformMatrix(ofNode &node, const glm::mat4 &mat) {
+static void applyWorldTransformMatrix(ofNode &node, const glm::mat4 &mat) {
 	glm::vec3 scale;
 	glm::quat rotation;
 	glm::vec3 translation;
@@ -31,13 +31,26 @@ void applyWorldTransformMatrix(ofNode &node, const glm::mat4 &mat) {
 	node.setGlobalOrientation(rotation);
 	node.setScale(scale/(node.getParent()?node.getParent()->getGlobalScale():glm::vec3{1,1,1}));
 }
+static ofRectangle getContentRect() {
+	using namespace ImGui;
+	ImVec2 lt = GetWindowContentRegionMin();
+	ImVec2 rb = GetWindowContentRegionMax();
+	
+	return {
+		lt.x + GetWindowPos().x,
+		lt.y + GetWindowPos().y,
+		rb.x - lt.x,
+		rb.y - lt.y
+	};
+}
 }
 
 namespace ImGuizmo
 {
 static bool Manipulate(const ofCamera &camera, glm::mat4 &matrix, OPERATION operation, MODE mode, const ofRectangle *viewvolume=nullptr, glm::mat4 *delta_matrix=nullptr, const float *snap = nullptr, const float *localBounds = nullptr, const float *boundsSnap = nullptr) {
 	ImGuiIO& io = ImGui::GetIO();
-	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+	auto contentRect = getContentRect();
+	ImGuizmo::SetRect(contentRect.x, contentRect.y, contentRect.width, contentRect.height);
 	auto view = glm::inverse(camera.getGlobalTransformMatrix());
 	auto proj = viewvolume ? camera.getProjectionMatrix(*viewvolume) : camera.getProjectionMatrix();
 	ImGuizmo::SetOrthographic(camera.getOrtho());
@@ -52,7 +65,6 @@ static bool Manipulate(const ofCamera &camera, ofNode &node, OPERATION operation
 	return false;
 }
 static bool ViewManipulate(ofNode &node, float eye_length, const ofRectangle &pos_size, const ofColor &bg_color) {
-//	IMGUI_API void ViewManipulate(float* view, float length, ImVec2 position, ImVec2 size, ImU32 backgroundColor);
 	auto view = glm::inverse(node.getGlobalTransformMatrix());
 	auto view_cache = view;
 	auto colorToHex = [](const ofColor &color) -> ImU32 {
