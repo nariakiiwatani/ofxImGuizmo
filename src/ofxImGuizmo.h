@@ -33,14 +33,11 @@ static void applyWorldTransformMatrix(ofNode &node, const glm::mat4 &mat) {
 }
 static ofRectangle getContentRect() {
 	using namespace ImGui;
-	ImVec2 lt = GetWindowContentRegionMin();
-	ImVec2 rb = GetWindowContentRegionMax();
-	
 	return {
-		lt.x + GetWindowPos().x,
-		lt.y + GetWindowPos().y,
-		rb.x - lt.x,
-		rb.y - lt.y
+		GetWindowPos().x,
+		GetWindowPos().y,
+		GetWindowWidth(),
+		GetWindowHeight()
 	};
 }
 }
