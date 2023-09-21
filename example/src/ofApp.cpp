@@ -19,21 +19,10 @@ void ofApp::draw(){
 	cam_.begin();
 	node_.draw();
 	cam_.end();
+	
 	gui_.begin();
 	ImGuizmo::BeginFrame();
-	auto mat = node_.getGlobalTransformMatrix();
-	if(ImGuizmo::Manipulate(cam_, mat, op_, mode_)) {
-		glm::mat4 transformation;
-		glm::vec3 scale;
-		glm::quat rotation;
-		glm::vec3 translation;
-		glm::vec3 skew;
-		glm::vec4 perspective;
-		glm::decompose(mat, scale, rotation, translation, skew, perspective);
-		node_.setPosition(translation);
-		node_.setScale(scale);
-		node_.setOrientation(rotation);
-	}
+	ImGuizmo::Manipulate(cam_, node_, op_, mode_);
 	gui_.end();
 }
 
